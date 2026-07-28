@@ -1,0 +1,26 @@
+{
+  "name": "andaman-booking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ระบบจองรถและห้องประชุม — Vehicle & Meeting Room Booking System",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "setup": "npm --workspace server run setup",
+    "dev": "concurrently -n server,client -c blue,green \"npm --workspace server run dev\" \"npm --workspace client run dev\"",
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm --workspace server run generate && npm --workspace client run build",
+    "start": "npm --workspace server run start",
+    "start:prod": "npm --workspace server run start:prod"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

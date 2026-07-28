@@ -1,0 +1,18 @@
+import pw from '/home/claude/.npm-global/lib/node_modules/playwright/index.js';
+const { chromium } = pw;
+const B = 'http://localhost:4000';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'] });
+const ctx = await browser.newContext({ viewport: { width: 1480, height: 940 }, deviceScaleFactor: 1.5 });
+const page = await ctx.newPage();
+page.setDefaultTimeout(15000);
+const errs = [];
+page.on('pageerror', e => errs.push(e.message));
+await page.goto(`${B}/login`, { waitUntil: 'domcontentloaded' });
+await page.waitForTimeout(1500);
+await page.click('.btn-primary');
+await page.waitForSelector('text=สวัสดี', { timeout: 12000 });
+await page.waitForTimeout(2200);
+await page.screenshot({ path: '/tmp/shots5/01-font-light.png' });
+console.log('shot done');
+console.log('ERRORS:', errs.length, errs.slice(0,5));
+await browser.close();

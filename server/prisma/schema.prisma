@@ -1,0 +1,198 @@
+// ระบบจองรถและห้องประชุม — Prisma schema
+// Default datasource is SQLite for zero-config local runs.
+// To use PostgreSQL: set provider = "postgresql" and DATABASE_URL accordingly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 17.2 Departments
+model Department {
+  id             Int      @id @default(autoincrement())
+  departmentCode String   @unique
+  departmentName String
+  status         String   @default("ACTIVE") // ACTIVE | INACTIVE
+  users          User[]
+  bookings       Booking[]
+
+  @@map("departments")
+}
+
+// 17.1 Users
+model User {
+  id           Int      @id @default(autoincrement())
+  employeeCode String   @unique
+  fullName     String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         String   @default("USER") // USER | ADMIN
+  status       String   @default("ACTIVE") // ACTIVE | INACTIVE
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings      Booking[]          @relation("Requester")
+  recurring     RecurringBooking[]
+  blocks        ResourceBlock[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+// 17.3 Resources — shared table for vehicles and meeting rooms
+model Resource {
+  id           Int      @id @default(autoincrement())
+  resourceType String   // VEHICLE | MEETING_ROOM
+  resourceCode String   @unique
+  resourceName String
+  imageUrl     String?
+  status       String   @default("AVAILABLE") // AVAILABLE | BOOKED | IN_USE | DISABLED | UNAVAILABLE
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vehicle     Vehicle?
+  meetingRoom MeetingRoom?
+  bookings    Booking[]
+  recurring   RecurringBooking[]
+  blocks      ResourceBlock[]
+
+  @@map("resources")
+}
+
+// 17.4 Vehicles
+model Vehicle {
+  id           Int      @id @default(autoincrement())
+  resourceId   Int      @unique
+  resource     Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  vehicleName  String
+  licensePlate String?
+  color        String?
+  imageUrl     String?
+  note         String?
+
+  @@map("vehicles")
+}
+
+// 17.5 Meeting Rooms
+model MeetingRoom {
+  id          Int      @id @default(autoincrement())
+  resourceId  Int      @unique
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  roomName    String
+  location    String?
+  openingTime String?  // "08:00"
+  closingTime String?  // "18:00"
+  imageUrl    String?
+  note        String?
+
+  @@map("meeting_rooms")
+}
+
+// 17.6 Bookings
+model Booking {
+  id                 Int      @id @default(autoincrement())
+  bookingNumber      String   @unique
+  bookingType        String   // VEHICLE | MEETING_ROOM
+  requesterId        Int
+  requester          User     @relation("Requester", fields: [requesterId], references: [id])
+  departmentId       Int?
+  department         Department? @relation(fields: [departmentId], references: [id])
+  resourceId         Int
+  resource           Resource @relation(fields: [resourceId], references: [id])
+  startDatetime      DateTime
+  endDatetime        DateTime
+  purpose            String?
+  status             String   @default("CONFIRMED") // CONFIRMED | ACTIVE | COMPLETED | CANCELLED | EXPIRED
+  recurringId        Int?
+  recurring          RecurringBooking? @relation(fields: [recurringId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  cancelledAt        DateTime?
+  cancelledById      Int?
+  cancellationReason String?
+
+  @@index([resourceId, startDatetime, endDatetime])
+  @@index([requesterId])
+  @@index([status])
+  @@map("bookings")
+}
+
+// 17.7 Recurring Bookings
+model RecurringBooking {
+  id                 Int      @id @default(autoincrement())
+  bookingType        String
+  requesterId        Int
+  requester          User     @relation(fields: [requesterId], references: [id])
+  resourceId         Int
+  resource           Resource @relation(fields: [resourceId], references: [id])
+  recurrenceType     String   // NONE | DAILY | WEEKLY | MONTHLY
+  recurrenceInterval Int      @default(1)
+  recurrenceEndDate  DateTime?
+  createdAt          DateTime @default(now())
+  status             String   @default("ACTIVE")
+  bookings           Booking[]
+
+  @@map("recurring_bookings")
+}
+
+// 17.8 Resource Blocks (ปิดใช้งานทรัพยากร)
+model ResourceBlock {
+  id            Int      @id @default(autoincrement())
+  resourceId    Int
+  resource      Resource @relation(fields: [resourceId], references: [id])
+  startDatetime DateTime
+  endDatetime   DateTime
+  blockType     String   @default("OTHER") // MAINTENANCE | CLEANING | INTERNAL | UNAVAILABLE | OTHER
+  reason        String?
+  createdById   Int
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  status        String   @default("ACTIVE") // ACTIVE | CANCELLED
+
+  @@index([resourceId, startDatetime, endDatetime])
+  @@map("resource_blocks")
+}
+
+// 17.9 Notifications
+model Notification {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+  bookingId        Int?
+  notificationType String   // BOOKING_CREATED | BOOKING_UPDATED | BOOKING_CANCELLED | REMINDER | RESOURCE_BLOCKED | ADMIN_MODIFIED
+  channel          String   @default("IN_APP") // IN_APP | EMAIL | LINE | GOOGLE_CALENDAR | OUTLOOK
+  message          String
+  sentAt           DateTime @default(now())
+  readAt           DateTime?
+  status           String   @default("SENT") // SENT | READ | FAILED
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+// 17.10 Audit Logs
+model AuditLog {
+  id             Int      @id @default(autoincrement())
+  userId         Int?
+  user           User?    @relation(fields: [userId], references: [id])
+  module         String
+  action         String
+  recordId       String?
+  oldValue       String?
+  newValue       String?
+  actionDatetime DateTime @default(now())
+  ipAddress      String?
+
+  @@index([module])
+  @@index([actionDatetime])
+  @@map("audit_logs")
+}

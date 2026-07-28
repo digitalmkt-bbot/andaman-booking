@@ -1,0 +1,20 @@
+# Local PostgreSQL for development.
+# Usage:  docker compose up -d
+# Then set server/.env DATABASE_URL to:
+#   postgresql://andaman:andaman@localhost:5432/andaman?schema=public
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: andaman-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: andaman
+      POSTGRES_PASSWORD: andaman
+      POSTGRES_DB: andaman
+    ports:
+      - "5432:5432"
+    volumes:
+      - andaman_pgdata:/var/lib/postgresql/data
+
+volumes:
+  andaman_pgdata:
