@@ -8,16 +8,33 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const t = getToken();
-    if (!t) {
-      setLoading(false);
-      return;
+    async function boot() {
+      try {
+        const t = getToken();
+        if (t) {
+          const r = await api.get('/auth/me');
+          setUser(r.data.user);
+          return;
+        }
+        // No sign-in required: transparently obtain a shared guest session.
+        const g = await api.post('/auth/guest');
+        setToken(g.data.token);
+        setUser(g.data.user);
+      } catch {
+        // Token invalid/expired — fall back to a fresh guest session.
+        try {
+          setToken(null);
+          const g = await api.post('/auth/guest');
+          setToken(g.data.token);
+          setUser(g.data.user);
+        } catch {
+          setToken(null);
+        }
+      } finally {
+        setLoading(false);
+      }
     }
-    api
-      .get('/auth/me')
-      .then((r) => setUser(r.data.user))
-      .catch(() => setToken(null))
-      .finally(() => setLoading(false));
+    boot();
   }, []);
 
   async function login(email, password) {

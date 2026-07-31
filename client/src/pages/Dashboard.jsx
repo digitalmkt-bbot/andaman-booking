@@ -192,8 +192,8 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-violet-500 text-white text-[10px] font-bold flex items-center justify-center">{(b.requester?.fullName || '?').slice(0, 1)}</span>
-                    <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 hidden sm:inline">{b.requester?.fullName?.split(' / ')[0]}</span>
+                    <span className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-violet-500 text-white text-[10px] font-bold flex items-center justify-center">{(b.requesterName || b.requester?.fullName || '?').slice(0, 1)}</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 hidden sm:inline">{(b.requesterName || b.requester?.fullName || '').split(' / ')[0]}</span>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-black text-slate-900 dark:text-white">{fmtTime(b.startDatetime, lang)}</p>

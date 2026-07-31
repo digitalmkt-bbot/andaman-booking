@@ -154,6 +154,10 @@ export const en = {
     noBackdate: 'Cannot book in the past',
     fillRequired: 'Please select date and time before checking',
     noneAvailable: 'No vehicles available for this time. Try another slot.',
+    requesterPlaceholder: 'Requester full name',
+    selectDepartment: 'Select department',
+    enterRequester: 'Please enter the requester name',
+    selectDept: 'Please select a department',
   },
   myBookings: {
     title: 'My Bookings',

@@ -34,8 +34,9 @@ api.interceptors.response.use(
   (r) => r,
   (e) => {
     if (e?.response?.status === 401 && getToken()) {
+      // No login screen: drop the stale token and reload to get a fresh guest session.
       setToken(null);
-      if (!location.pathname.startsWith('/login')) location.assign('/login');
+      location.reload();
     }
     return Promise.reject(e);
   }

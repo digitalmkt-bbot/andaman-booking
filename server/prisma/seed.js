@@ -8,19 +8,36 @@ async function main() {
 
   // ---- Departments ----
   const depts = [
-    { departmentCode: 'ADMIN', departmentName: 'สำนักงานบริหาร / Administration' },
-    { departmentCode: 'MKT', departmentName: 'การตลาด / Marketing' },
-    { departmentCode: 'OPS', departmentName: 'ปฏิบัติการ / Operations' },
-    { departmentCode: 'FIN', departmentName: 'การเงิน / Finance' },
+    { departmentCode: 'SEC', departmentName: 'SECRETARY' },
+    { departmentCode: 'HR', departmentName: 'HUMAN RESOURCES' },
+    { departmentCode: 'ACC', departmentName: 'ACCOUNTING & FINANCE' },
+    { departmentCode: 'PUR', departmentName: 'PURCHASE' },
+    { departmentCode: 'MKT', departmentName: 'MARKETING' },
+    { departmentCode: 'BD', departmentName: 'BUSINESS DEVELOPMENT' },
+    { departmentCode: 'PR', departmentName: 'PUBLIC RELATIONS' },
+    { departmentCode: 'GFX', departmentName: 'GRAPHIC' },
+    { departmentCode: 'SA', departmentName: 'SALES AGENT' },
+    { departmentCode: 'RSV', departmentName: 'RESERVATION' },
+    { departmentCode: 'SONL', departmentName: 'SALE ONLINE' },
+    { departmentCode: 'SRV', departmentName: 'SERVICE' },
+    { departmentCode: 'MEC', departmentName: 'MECHANIC' },
+    { departmentCode: 'PKTP', departmentName: 'PHUKET PIER' },
+    { departmentCode: 'TLP', departmentName: 'TAP LAMU PIER' },
+    { departmentCode: 'RNGP', departmentName: 'RANONG PIER' },
+    { departmentCode: 'TLPS', departmentName: 'TAP LAMU PIER SHOP' },
+    { departmentCode: 'SC', departmentName: 'SALE COUNTER' },
   ];
   for (const d of depts) {
     await prisma.department.upsert({
       where: { departmentCode: d.departmentCode },
-      update: {},
+      update: { departmentName: d.departmentName, status: 'ACTIVE' },
       create: d,
     });
   }
-  const adminDept = await prisma.department.findUnique({ where: { departmentCode: 'ADMIN' } });
+  // Remove legacy placeholder departments that are not part of the official list.
+  for (const code of ['ADMIN', 'OPS', 'FIN']) {
+    try { await prisma.department.deleteMany({ where: { departmentCode: code } }); } catch { /* referenced — keep */ }
+  }
   const mktDept = await prisma.department.findUnique({ where: { departmentCode: 'MKT' } });
 
   // ---- Users ----
@@ -37,7 +54,23 @@ async function main() {
       phone: '0800000001',
       passwordHash: adminHash,
       role: 'ADMIN',
-      departmentId: adminDept?.id,
+      departmentId: null,
+    },
+  });
+
+  // Shared public account — the app auto-signs-in as this user so no login is required.
+  const guestHash = await bcrypt.hash('guest', 10);
+  await prisma.user.upsert({
+    where: { email: 'guest@loveandaman.com' },
+    update: { role: 'ADMIN', status: 'ACTIVE' },
+    create: {
+      employeeCode: 'GUEST',
+      fullName: 'ผู้ใช้งาน / Guest',
+      email: 'guest@loveandaman.com',
+      passwordHash: guestHash,
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      departmentId: null,
     },
   });
 

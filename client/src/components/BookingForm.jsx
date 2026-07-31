@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, apiError } from '../api.js';
 import { Card, Field } from './ui.jsx';
 import { toBangkokISO, fmtDate } from '../lib/format.js';
@@ -25,6 +25,12 @@ export default function BookingForm({ type }) {
   const [results, setResults] = useState(null);
   const [checking, setChecking] = useState(false);
   const [msg, setMsg] = useState(null);
+
+  // requester + department
+  const [requesterName, setRequesterName] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
+  const { data: deptData } = useQuery({ queryKey: ['departments'], queryFn: async () => (await api.get('/departments')).data });
+  const departments = (deptData?.departments || []).filter((d) => d.status !== 'INACTIVE');
 
   // recurring
   const [recurrenceType, setRecurrenceType] = useState('NONE');
@@ -83,6 +89,14 @@ export default function BookingForm({ type }) {
     setMsg(null);
     const w = validWindow();
     if (!w) return;
+    if (!requesterName.trim()) {
+      setMsg({ type: 'error', text: t('booking.enterRequester') });
+      return;
+    }
+    if (!departmentId) {
+      setMsg({ type: 'error', text: t('booking.selectDept') });
+      return;
+    }
     if (!selected) {
       setMsg({ type: 'error', text: t('booking.selectResourceFirst') });
       return;
@@ -93,6 +107,8 @@ export default function BookingForm({ type }) {
       start: w.s,
       end: w.e,
       purpose: isVehicle ? purpose : null,
+      requesterName: requesterName.trim(),
+      departmentId: Number(departmentId),
     };
     try {
       if (recurrenceType !== 'NONE') {
@@ -130,6 +146,20 @@ export default function BookingForm({ type }) {
       <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{isVehicle ? t('booking.newVehicle') : t('booking.newRoom')}</h1>
 
       <Card>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label={t('booking.requester')} required>
+            <input className="input" value={requesterName} onChange={(e) => setRequesterName(e.target.value)} placeholder={t('booking.requesterPlaceholder')} />
+          </Field>
+          <Field label={t('booking.department')} required>
+            <select className="input" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+              <option value="">{t('booking.selectDepartment')}</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>{d.departmentCode} — {d.departmentName}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label={isVehicle ? t('booking.startDate') : t('booking.useDate')} required>
             <input type="date" className="input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />

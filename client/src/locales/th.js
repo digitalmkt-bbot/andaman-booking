@@ -154,6 +154,10 @@ export const th = {
     noBackdate: 'ไม่สามารถจองย้อนหลังได้',
     fillRequired: 'กรุณาเลือกวันที่และเวลาให้ครบก่อนกดตรวจสอบ',
     noneAvailable: 'ไม่มีคันว่างในช่วงเวลานี้ กรุณาเลือกเวลาอื่น',
+    requesterPlaceholder: 'ชื่อ-นามสกุล ผู้จอง',
+    selectDepartment: 'เลือกแผนก',
+    enterRequester: 'กรุณากรอกชื่อผู้จอง',
+    selectDept: 'กรุณาเลือกแผนก',
   },
   myBookings: {
     title: 'รายการจองของฉัน',

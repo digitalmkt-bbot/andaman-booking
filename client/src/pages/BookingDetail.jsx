@@ -63,7 +63,7 @@ export default function BookingDetail() {
       <Card>
         <Row label={t('booking.bookingNumber')} value={b.bookingNumber} />
         <Row label={t('booking.resource')} value={`${b.resource?.resourceName} (${t(`resourceType.${b.bookingType}`)})`} />
-        <Row label={t('booking.requester')} value={b.requester?.fullName} />
+        <Row label={t('booking.requester')} value={b.requesterName || b.requester?.fullName} />
         <Row label={t('booking.department')} value={b.department?.departmentName || b.requester?.department?.departmentName || '—'} />
         <Row label={t('booking.startTime')} value={fmtDateTime(b.startDatetime, i18n.language)} />
         <Row label={t('booking.endTime')} value={fmtDateTime(b.endDatetime, i18n.language)} />

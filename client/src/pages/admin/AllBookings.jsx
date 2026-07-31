@@ -35,7 +35,7 @@ export default function AllBookings() {
         BookingNo: b.bookingNumber,
         Type: b.bookingType,
         Resource: b.resource?.resourceName,
-        Requester: b.requester?.fullName,
+        Requester: b.requesterName || b.requester?.fullName,
         Department: b.department?.departmentName || '',
         Start: fmtDateTime(b.startDatetime, 'en'),
         End: fmtDateTime(b.endDatetime, 'en'),
@@ -99,7 +99,7 @@ export default function AllBookings() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">{b.resource?.resourceName}</td>
-                  <td className="px-4 py-3">{b.requester?.fullName}</td>
+                  <td className="px-4 py-3">{b.requesterName || b.requester?.fullName}</td>
                   <td className="px-4 py-3 text-xs text-slate-500">
                     {fmtDateTime(b.startDatetime, i18n.language)}
                     <br />

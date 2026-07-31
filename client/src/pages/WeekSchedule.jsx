@@ -70,7 +70,7 @@ export default function WeekSchedule() {
   const events = useMemo(() => {
     const list = [];
     for (const b of data?.bookings || []) {
-      list.push({ id: `b${b.id}`, bid: b.id, type: b.bookingType, title: b.resource?.resourceName || '', sub: b.requester?.fullName?.split(' / ')[0] || '', start: new Date(b.startDatetime), end: new Date(b.endDatetime), status: b.status });
+      list.push({ id: `b${b.id}`, bid: b.id, type: b.bookingType, title: b.resource?.resourceName || '', sub: (b.requesterName || b.requester?.fullName || '').split(' / ')[0], start: new Date(b.startDatetime), end: new Date(b.endDatetime), status: b.status });
     }
     for (const bl of data?.blocks || []) {
       list.push({ id: `bl${bl.id}`, type: 'BLOCK', title: bl.resource?.resourceName || '', sub: t(`blockType.${bl.blockType}`), start: new Date(bl.startDatetime), end: new Date(bl.endDatetime) });

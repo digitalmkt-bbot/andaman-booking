@@ -32,6 +32,32 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
+// Public access: issue a token for the shared guest account so the app can be
+// used straight from the link without a sign-in step.
+router.post('/guest', async (req, res, next) => {
+  try {
+    let user = await prisma.user.findUnique({ where: { email: 'guest@loveandaman.com' }, include: { department: true } });
+    if (!user) {
+      const passwordHash = await bcrypt.hash('guest', 10);
+      user = await prisma.user.create({
+        data: {
+          employeeCode: 'GUEST',
+          fullName: 'ผู้ใช้งาน / Guest',
+          email: 'guest@loveandaman.com',
+          passwordHash,
+          role: 'ADMIN',
+          status: 'ACTIVE',
+        },
+        include: { department: true },
+      });
+    }
+    const token = signToken(user);
+    res.json({ token, user: publicUser(user) });
+  } catch (e) {
+    next(e);
+  }
+});
+
 const changePwSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(6),

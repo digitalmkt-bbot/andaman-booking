@@ -142,6 +142,8 @@ const createSchema = z.object({
   start: isoDate,
   end: isoDate,
   purpose: z.string().optional().nullable(),
+  departmentId: z.number().int().optional().nullable(),
+  requesterName: z.string().optional().nullable(),
 });
 
 router.post('/', requireAuth, async (req, res, next) => {
@@ -154,6 +156,8 @@ router.post('/', requireAuth, async (req, res, next) => {
       start: new Date(body.start),
       end: new Date(body.end),
       purpose: body.purpose,
+      departmentId: body.departmentId,
+      requesterName: body.requesterName,
     });
     await writeAudit(req, { module: 'BOOKING', action: 'CREATE', recordId: booking.id, newValue: booking });
     res.status(201).json({ booking });
@@ -185,6 +189,8 @@ router.post('/recurring', requireAuth, async (req, res, next) => {
       recurrenceType: body.recurrenceType,
       recurrenceInterval: body.recurrenceInterval,
       recurrenceEndDate: new Date(body.recurrenceEndDate),
+      departmentId: body.departmentId,
+      requesterName: body.requesterName,
     });
     await writeAudit(req, { module: 'BOOKING', action: 'CREATE_RECURRING', recordId: result.recurring.id });
     res.status(201).json({ recurringId: result.recurring.id, count: result.bookings.length, bookings: result.bookings });

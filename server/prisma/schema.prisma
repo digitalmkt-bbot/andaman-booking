@@ -104,6 +104,7 @@ model Booking {
   bookingType        String   // VEHICLE | MEETING_ROOM
   requesterId        Int
   requester          User     @relation("Requester", fields: [requesterId], references: [id])
+  requesterName      String?
   departmentId       Int?
   department         Department? @relation(fields: [departmentId], references: [id])
   resourceId         Int

@@ -32,7 +32,7 @@ async function loadBookableResource(resourceId) {
  * transaction (step-2 verification of section 8.2) so two concurrent requests
  * cannot both pass the overlap check.
  */
-export async function createBooking({ user, bookingType, resourceId, start, end, purpose, recurringId }) {
+export async function createBooking({ user, bookingType, resourceId, start, end, purpose, recurringId, departmentId, requesterName }) {
   assertValidWindow(start, end);
   const resource = await loadBookableResource(resourceId);
   if (resource.resourceType !== bookingType) {
@@ -54,7 +54,8 @@ export async function createBooking({ user, bookingType, resourceId, start, end,
           bookingNumber,
           bookingType,
           requesterId: user.id,
-          departmentId: user.departmentId ?? null,
+          requesterName: requesterName || null,
+          departmentId: departmentId ?? user.departmentId ?? null,
           resourceId,
           startDatetime: start,
           endDatetime: end,
@@ -77,7 +78,7 @@ export async function createBooking({ user, bookingType, resourceId, start, end,
  */
 export async function createRecurringBooking({
   user, bookingType, resourceId, start, end, purpose,
-  recurrenceType, recurrenceInterval, recurrenceEndDate,
+  recurrenceType, recurrenceInterval, recurrenceEndDate, departmentId, requesterName,
 }) {
   assertValidWindow(start, end);
   const resource = await loadBookableResource(resourceId);
@@ -123,7 +124,8 @@ export async function createRecurringBooking({
             bookingNumber,
             bookingType,
             requesterId: user.id,
-            departmentId: user.departmentId ?? null,
+            requesterName: requesterName || null,
+            departmentId: departmentId ?? user.departmentId ?? null,
             resourceId,
             startDatetime: occ.start,
             endDatetime: occ.end,
