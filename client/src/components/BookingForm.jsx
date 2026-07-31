@@ -33,9 +33,16 @@ export default function BookingForm({ type }) {
   const effectiveEndDate = isVehicle ? endDate : startDate;
 
   function validWindow() {
+    if (!startDate || !startTime || !effectiveEndDate || !endTime) {
+      setMsg({ type: 'error', text: t('booking.fillRequired') });
+      return null;
+    }
     const s = toBangkokISO(startDate, startTime);
     const e = toBangkokISO(effectiveEndDate, endTime);
-    if (!s || !e) return null;
+    if (!s || !e) {
+      setMsg({ type: 'error', text: t('booking.fillRequired') });
+      return null;
+    }
     if (new Date(e) <= new Date(s)) {
       setMsg({ type: 'error', text: t('booking.endMustBeAfterStart') });
       return null;
@@ -56,7 +63,11 @@ export default function BookingForm({ type }) {
     try {
       const r = await api.post('/bookings/availability', { bookingType: type, start: w.s, end: w.e });
       setResults(r.data.results);
-      if (!isVehicle) {
+      if (isVehicle) {
+        if (!r.data.results.some((x) => x.available)) {
+          setMsg({ type: 'error', text: t('booking.noneAvailable') });
+        }
+      } else {
         // Auto-select the single room if available.
         const room = r.data.results[0];
         if (room?.available) setSelected(room.resourceId);

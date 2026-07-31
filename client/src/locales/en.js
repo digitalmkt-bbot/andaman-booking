@@ -152,6 +152,8 @@ export const en = {
     roomAuto: 'The main meeting room is assigned automatically.',
     endMustBeAfterStart: 'End time must be after start time',
     noBackdate: 'Cannot book in the past',
+    fillRequired: 'Please select date and time before checking',
+    noneAvailable: 'No vehicles available for this time. Try another slot.',
   },
   myBookings: {
     title: 'My Bookings',

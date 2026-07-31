@@ -30,14 +30,6 @@ function Protected({ children, adminOnly }) {
   return <Layout>{children}</Layout>;
 }
 
-// Full-screen route without the standard Layout shell (own chrome).
-function ProtectedFull({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <Spinner />;
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
-}
-
 export default function App() {
   const { user, loading } = useAuth();
   return (
@@ -45,7 +37,7 @@ export default function App() {
       <Route path="/login" element={user && !loading ? <Navigate to="/" replace /> : <Login />} />
 
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
-      <Route path="/calendar" element={<ProtectedFull><WeekSchedule /></ProtectedFull>} />
+      <Route path="/calendar" element={<Protected><WeekSchedule /></Protected>} />
       <Route path="/book/vehicle" element={<Protected><BookVehicle /></Protected>} />
       <Route path="/book/room" element={<Protected><BookRoom /></Protected>} />
       <Route path="/my-bookings" element={<Protected><MyBookings /></Protected>} />
