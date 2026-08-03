@@ -58,11 +58,29 @@ export default function WeekSchedule() {
   const visibleDays = view === 'day' ? days.filter((d) => d.key === anchorKey) : days;
   const shownDays = visibleDays.length ? visibleDays : [days[0]];
 
-  const fromISO = `${days[0].key}T00:00:00+07:00`;
-  const toISO = `${days[6].key}T23:59:59+07:00`;
+  // Month grid cells (6 weeks, Monday-first) used by the month view.
+  const monthCells = useMemo(() => {
+    const a = bkkParts(anchor);
+    const first = new Date(Date.UTC(a.y, a.mo - 1, 1));
+    const startDay = (first.getUTCDay() + 6) % 7;
+    return Array.from({ length: 42 }, (_, i) => {
+      const dd = new Date(Date.UTC(a.y, a.mo - 1, 1 - startDay + i));
+      return {
+        key: keyOf(dd.getUTCFullYear(), dd.getUTCMonth() + 1, dd.getUTCDate()),
+        dayNum: dd.getUTCDate(),
+        y: dd.getUTCFullYear(), mo: dd.getUTCMonth() + 1, d: dd.getUTCDate(),
+        inMonth: dd.getUTCMonth() + 1 === a.mo,
+      };
+    });
+  }, [anchor]);
+
+  const rangeStart = view === 'month' ? monthCells[0].key : days[0].key;
+  const rangeEnd = view === 'month' ? monthCells[41].key : days[6].key;
+  const fromISO = `${rangeStart}T00:00:00+07:00`;
+  const toISO = `${rangeEnd}T23:59:59+07:00`;
 
   const { data } = useQuery({
-    queryKey: ['week-cal', days[0].key, days[6].key],
+    queryKey: ['week-cal', rangeStart, rangeEnd],
     queryFn: async () => (await api.get('/bookings/calendar', { params: { from: fromISO, to: toISO } })).data,
   });
 
@@ -105,7 +123,29 @@ export default function WeekSchedule() {
 
   const monthLabel = new Intl.DateTimeFormat(i18n.language === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }).format(anchor);
   const hours = Array.from({ length: GRID_END - GRID_START }, (_, i) => GRID_START + i);
-  const shiftWeek = (n) => { const d = new Date(anchor); d.setDate(d.getDate() + n * 7); setAnchor(d); };
+  const shift = (n) => {
+    const d = new Date(anchor);
+    if (view === 'month') d.setMonth(d.getMonth() + n);
+    else d.setDate(d.getDate() + n * 7);
+    setAnchor(d);
+  };
+
+  // Per-day grouping used by the month view.
+  const eventsByDayKey = useMemo(() => {
+    const map = {};
+    for (const ev of events) {
+      const s = bkkParts(ev.start);
+      const k = keyOf(s.y, s.mo, s.d);
+      (map[k] = map[k] || []).push(ev);
+    }
+    for (const k of Object.keys(map)) map[k].sort((a, b) => a.start - b.start);
+    return map;
+  }, [events]);
+
+  const openDay = (cell) => {
+    setAnchor(new Date(Date.UTC(cell.y, cell.mo - 1, cell.d, 5)));
+    setView('day');
+  };
 
   // Next upcoming booking for the highlight card
   const nextEv = useMemo(() => {
@@ -199,11 +239,48 @@ export default function WeekSchedule() {
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="text-lg font-bold text-slate-900 dark:text-white">{monthLabel}</span>
                 <button onClick={() => setAnchor(new Date())} className="px-3 py-1 rounded-full bg-slate-100 dark:bg-ink-750 text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-200">{t('common.today')}</button>
-                <button onClick={() => shiftWeek(-1)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-ink-750 flex items-center justify-center text-slate-500 hover:bg-slate-200"><ChevronLeft className="w-4 h-4" /></button>
-                <button onClick={() => shiftWeek(1)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-ink-750 flex items-center justify-center text-slate-500 hover:bg-slate-200"><ChevronRight className="w-4 h-4" /></button>
+                <button onClick={() => shift(-1)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-ink-750 flex items-center justify-center text-slate-500 hover:bg-slate-200"><ChevronLeft className="w-4 h-4" /></button>
+                <button onClick={() => shift(1)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-ink-750 flex items-center justify-center text-slate-500 hover:bg-slate-200"><ChevronRight className="w-4 h-4" /></button>
               </div>
             </div>
 
+            {view === 'month' ? (
+              /* Month grid */
+              <div className="p-3 sm:p-4">
+                <div className="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 mb-2">
+                  {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((d) => <div key={d} className="py-1">{d}</div>)}
+                </div>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {monthCells.map((c) => {
+                    const dayEvents = eventsByDayKey[c.key] || [];
+                    const isToday = c.key === todayKey;
+                    return (
+                      <div key={c.key} className={`min-h-[96px] rounded-2xl border p-1.5 flex flex-col ${isToday ? 'border-lime-300 dark:border-lime-400/60' : 'border-slate-100 dark:border-zinc-800'} ${c.inMonth ? 'bg-white dark:bg-ink-800' : 'bg-slate-50/70 dark:bg-ink-850'}`}>
+                        <button onClick={() => openDay(c)} className={`self-start w-6 h-6 mb-1 rounded-full text-xs font-bold flex items-center justify-center ${isToday ? 'bg-lime-300 text-slate-900 dark:bg-lime-400 dark:text-slate-950' : c.inMonth ? 'text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-ink-750' : 'text-slate-300 dark:text-zinc-600'}`}>{c.dayNum}</button>
+                        <div className="space-y-1 overflow-hidden">
+                          {dayEvents.slice(0, 3).map((ev) => {
+                            const st = TYPE_STYLE[ev.type] || TYPE_STYLE.VEHICLE;
+                            return (
+                              <button key={ev.id} onClick={() => ev.bid && navigate(`/bookings/${ev.bid}`)}
+                                className="w-full text-left rounded-md px-1.5 py-0.5 text-white text-[10px] font-semibold truncate hover:brightness-105"
+                                style={{ background: st.bg }} title={`${fmtRange(ev.start, ev.end)} · ${ev.title}`}>
+                                {ev.title}
+                              </button>
+                            );
+                          })}
+                          {dayEvents.length > 3 && (
+                            <button onClick={() => openDay(c)} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-1">
+                              +{dayEvents.length - 3} {i18n.language === 'th' ? 'เพิ่มเติม' : 'more'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+            <>
             {/* Day columns header */}
             <div className="flex px-3 pt-3">
               <div className="w-14 shrink-0 text-[11px] text-slate-400 flex items-end pb-1 pl-1">GMT+7</div>
@@ -258,6 +335,8 @@ export default function WeekSchedule() {
                 ))}
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>
