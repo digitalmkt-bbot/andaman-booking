@@ -15,7 +15,7 @@ export function StatusBadge({ status, colors, label }) {
 
 export function Field({ label, children, error, required }) {
   return (
-    <div className="mb-4">
+    <div className="mb-4 min-w-0">
       {label && (
         <label className="label">
           {label} {required && <span className="text-rose-500">*</span>}

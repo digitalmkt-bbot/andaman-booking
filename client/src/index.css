@@ -19,6 +19,22 @@ html.dark body {
   background: #0b0d10;
 }
 
+/* Never let form controls spill outside their container (esp. iOS date/time
+   inputs, which otherwise render at an intrinsic width that ignores width:100%). */
+@layer base {
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    min-width: 0;
+  }
+}
+
 @layer components {
   /* Buttons */
   .btn {
@@ -60,7 +76,7 @@ html.dark body {
 
   /* Form controls */
   .input {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm
+    @apply w-full min-w-0 max-w-full box-border rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm
            text-slate-800 placeholder-slate-400 outline-none transition
            focus:border-brand-500 focus:ring-1 focus:ring-brand-500
            dark:bg-ink-750 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500;
