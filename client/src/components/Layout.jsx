@@ -83,7 +83,7 @@ export default function Layout({ children }) {
   };
 
   const Sidebar = (
-    <aside className="w-64 shrink-0 flex flex-col justify-between p-5 border-r border-slate-100 dark:border-zinc-800 bg-slate-50/60 dark:bg-ink-850 h-full overflow-y-auto custom-scrollbar">
+    <aside className="w-64 shrink-0 flex flex-col justify-between p-5 border-r border-slate-100 dark:border-zinc-800 bg-white lg:bg-slate-50/60 dark:bg-ink-850 h-full overflow-y-auto custom-scrollbar">
       <div>
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-2.5">
@@ -134,7 +134,7 @@ export default function Layout({ children }) {
         {open && (
           <>
             <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setOpen(false)} />
-            <div className="fixed inset-y-0 left-0 z-40 lg:hidden">{Sidebar}</div>
+            <div className="fixed inset-y-0 left-0 z-40 lg:hidden shadow-2xl">{Sidebar}</div>
           </>
         )}
 
