@@ -158,6 +158,7 @@ export const th = {
     selectDepartment: 'เลือกแผนก',
     enterRequester: 'กรุณากรอกชื่อผู้จอง',
     selectDept: 'กรุณาเลือกแผนก',
+    recurringHint: 'จะจองเวลา {{start}}–{{end}} ของแต่ละวันตามรอบที่เลือก จนถึงวันสิ้นสุดการจองซ้ำ',
   },
   myBookings: {
     title: 'รายการจองของฉัน',

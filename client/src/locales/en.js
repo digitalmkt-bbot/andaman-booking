@@ -158,6 +158,7 @@ export const en = {
     selectDepartment: 'Select department',
     enterRequester: 'Please enter the requester name',
     selectDept: 'Please select a department',
+    recurringHint: 'Books {{start}}–{{end}} on each occurrence until the recurrence end date',
   },
   myBookings: {
     title: 'My Bookings',

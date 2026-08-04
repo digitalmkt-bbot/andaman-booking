@@ -36,7 +36,12 @@ export default function BookingForm({ type }) {
   const [recurrenceType, setRecurrenceType] = useState('NONE');
   const [recurrenceEnd, setRecurrenceEnd] = useState('');
 
-  const effectiveEndDate = isVehicle ? endDate : startDate;
+  // A one-time vehicle booking may span multiple days (start date → end date).
+  // Any recurring booking (and every room booking) is a single-day time window,
+  // so each occurrence is startTime→endTime on the SAME day — otherwise a daily
+  // repeat of a multi-day window would block the resource for weeks.
+  const singleDay = !isVehicle || recurrenceType !== 'NONE';
+  const effectiveEndDate = singleDay ? startDate : endDate;
 
   function validWindow() {
     if (!startDate || !startTime || !effectiveEndDate || !endTime) {
@@ -167,7 +172,7 @@ export default function BookingForm({ type }) {
           <Field label={t('booking.startTime')} required>
             <input type="time" className="input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </Field>
-          {isVehicle && (
+          {!singleDay && (
             <Field label={t('booking.endDate')} required>
               <input type="date" className="input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </Field>
@@ -193,6 +198,11 @@ export default function BookingForm({ type }) {
             </Field>
           )}
         </div>
+        {recurrenceType !== 'NONE' && (
+          <p className="text-xs text-slate-500 dark:text-zinc-400 -mt-2">
+            {t('booking.recurringHint', { start: startTime, end: endTime })}
+          </p>
+        )}
 
         <button className="btn-secondary" onClick={checkAvailability} disabled={checking}>
           {checking ? '...' : isVehicle ? t('booking.checkAvailability') : t('booking.checkRoom')}
