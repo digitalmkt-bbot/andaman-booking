@@ -250,12 +250,12 @@ export default function WeekSchedule() {
                 <div className="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 mb-2">
                   {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((d) => <div key={d} className="py-1">{d}</div>)}
                 </div>
-                <div className="grid grid-cols-7 gap-1.5">
+                <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                   {monthCells.map((c) => {
                     const dayEvents = eventsByDayKey[c.key] || [];
                     const isToday = c.key === todayKey;
                     return (
-                      <div key={c.key} className={`min-h-[96px] rounded-2xl border p-1.5 flex flex-col ${isToday ? 'border-lime-300 dark:border-lime-400/60' : 'border-slate-100 dark:border-zinc-800'} ${c.inMonth ? 'bg-white dark:bg-ink-800' : 'bg-slate-50/70 dark:bg-ink-850'}`}>
+                      <div key={c.key} className={`min-h-[64px] sm:min-h-[96px] rounded-lg sm:rounded-2xl border p-1 sm:p-1.5 flex flex-col ${isToday ? 'border-lime-300 dark:border-lime-400/60' : 'border-slate-100 dark:border-zinc-800'} ${c.inMonth ? 'bg-white dark:bg-ink-800' : 'bg-slate-50/70 dark:bg-ink-850'}`}>
                         <button onClick={() => openDay(c)} className={`self-start w-6 h-6 mb-1 rounded-full text-xs font-bold flex items-center justify-center ${isToday ? 'bg-lime-300 text-slate-900 dark:bg-lime-400 dark:text-slate-950' : c.inMonth ? 'text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-ink-750' : 'text-slate-300 dark:text-zinc-600'}`}>{c.dayNum}</button>
                         <div className="space-y-1 overflow-hidden">
                           {dayEvents.slice(0, 3).map((ev) => {
@@ -281,6 +281,8 @@ export default function WeekSchedule() {
               </div>
             ) : (
             <>
+            <div className="overflow-x-auto">
+            <div style={{ minWidth: shownDays.length > 1 ? shownDays.length * 104 + 56 : undefined }}>
             {/* Day columns header */}
             <div className="flex px-3 pt-3">
               <div className="w-14 shrink-0 text-[11px] text-slate-400 flex items-end pb-1 pl-1">GMT+7</div>
@@ -293,7 +295,7 @@ export default function WeekSchedule() {
             </div>
 
             {/* Time grid */}
-            <div className="flex-1 overflow-auto p-3" style={{ maxHeight: '68vh' }}>
+            <div className="overflow-y-auto p-3" style={{ maxHeight: '68vh' }}>
               <div className="flex min-h-full">
                 {/* hour gutter */}
                 <div className="w-14 shrink-0">
@@ -334,6 +336,8 @@ export default function WeekSchedule() {
                   </div>
                 ))}
               </div>
+            </div>
+            </div>
             </div>
             </>
             )}
