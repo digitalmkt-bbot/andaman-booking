@@ -167,7 +167,13 @@ export default function BookingForm({ type }) {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label={isVehicle ? t('booking.startDate') : t('booking.useDate')} required>
-            <input type="date" className="input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <input type="date" className="input" value={startDate} onChange={(e) => {
+              const v = e.target.value;
+              setStartDate(v);
+              // Keep the end date in sync by default (same-day use); still editable
+              // for multi-day rentals. Only fill when empty or earlier than start.
+              if (!endDate || endDate < v) setEndDate(v);
+            }} />
           </Field>
           <Field label={t('booking.startTime')} required>
             <input type="time" className="input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
