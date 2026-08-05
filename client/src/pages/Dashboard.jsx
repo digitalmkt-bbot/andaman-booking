@@ -118,6 +118,47 @@ export default function Dashboard() {
         )}
       </section>
 
+      {/* Vehicle status today */}
+      {(d.vehicleStatus?.length > 0) && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">{t('dashboard.vehicleStatusToday')}</h2>
+            <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">{d.availableVehicles ?? 0}/{d.vehicleTotal ?? 0} {t('booking.available')}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {d.vehicleStatus.map((v) => {
+              const inUse = !!v.current;
+              const badge = v.disabled
+                ? 'bg-slate-200 text-slate-600 dark:bg-zinc-700 dark:text-zinc-300'
+                : inUse
+                ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300';
+              const label = v.disabled ? t('dashboard.disabled') : inUse ? t('dashboard.inUse') : t('booking.available');
+              return (
+                <div key={v.id} className="p-4 rounded-3xl border border-slate-200/70 dark:border-zinc-800 bg-slate-50/70 dark:bg-ink-800">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-extrabold text-slate-900 dark:text-white truncate">{v.name}</span>
+                    <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${badge}`}>{label}</span>
+                  </div>
+                  {inUse ? (
+                    <p className="text-xs font-medium text-slate-600 dark:text-zinc-300 mt-1.5">
+                      {fmtTime(v.current.start, lang)}–{fmtTime(v.current.end, lang)}
+                      {v.current.requester ? ` · ${v.current.requester.split(' / ')[0]}` : ''}
+                    </p>
+                  ) : v.next ? (
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      {t('dashboard.nextAt')} {fmtTime(v.next.start, lang)}–{fmtTime(v.next.end, lang)}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-slate-400 mt-1.5">{t('dashboard.freeAllDay')}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Weekly usage + Next bookings */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Weekly usage */}

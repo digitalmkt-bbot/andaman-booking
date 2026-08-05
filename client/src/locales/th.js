@@ -92,6 +92,9 @@ export const th = {
     bookingsByVehicle: 'การจองแยกตามรถ',
     totalVehicles: 'รถทั้งหมด',
     times: 'ครั้ง',
+    vehicleStatusToday: 'สถานะรถวันนี้',
+    nextAt: 'ถัดไป',
+    freeAllDay: 'ว่างทั้งวัน',
   },
   resourceType: { VEHICLE: 'รถ', MEETING_ROOM: 'ห้องประชุม' },
   bookingStatus: {

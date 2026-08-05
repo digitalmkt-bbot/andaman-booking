@@ -92,6 +92,9 @@ export const en = {
     bookingsByVehicle: 'Bookings by vehicle',
     totalVehicles: 'Total vehicles',
     times: 'times',
+    vehicleStatusToday: 'Vehicle status today',
+    nextAt: 'Next',
+    freeAllDay: 'Free all day',
   },
   resourceType: { VEHICLE: 'Vehicle', MEETING_ROOM: 'Meeting Room' },
   bookingStatus: {
