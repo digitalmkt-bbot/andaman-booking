@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, apiError } from '../api.js';
 import { Card, Field } from './ui.jsx';
+import DateField from './DateField.jsx';
 import { toBangkokISO, fmtDate } from '../lib/format.js';
 
 /**
@@ -167,8 +168,7 @@ export default function BookingForm({ type }) {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label={isVehicle ? t('booking.startDate') : t('booking.useDate')} required>
-            <input type="date" className="input" value={startDate} onChange={(e) => {
-              const v = e.target.value;
+            <DateField value={startDate} onChange={(v) => {
               setStartDate(v);
               // Keep the end date in sync by default (same-day use); still editable
               // for multi-day rentals. Only fill when empty or earlier than start.
@@ -180,7 +180,7 @@ export default function BookingForm({ type }) {
           </Field>
           {!singleDay && (
             <Field label={t('booking.endDate')} required>
-              <input type="date" className="input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <DateField value={endDate} onChange={setEndDate} min={startDate} />
             </Field>
           )}
           <Field label={t('booking.endTime')} required>
@@ -200,7 +200,7 @@ export default function BookingForm({ type }) {
           </Field>
           {recurrenceType !== 'NONE' && (
             <Field label={t('booking.recurrenceEnd')} required>
-              <input type="date" className="input" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)} />
+              <DateField value={recurrenceEnd} onChange={setRecurrenceEnd} min={startDate} />
             </Field>
           )}
         </div>
