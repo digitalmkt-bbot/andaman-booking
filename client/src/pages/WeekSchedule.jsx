@@ -28,6 +28,27 @@ function bkkParts(date) {
 }
 const keyOf = (y, mo, d) => `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
+// Every calendar day (Bangkok) that an event touches, from its start day to its
+// end day inclusive. This lets a multi-day booking appear on ALL of its days,
+// not just the day it starts. BKK is a fixed +07:00 offset, so iterating the
+// calendar date via UTC math is safe.
+function daySpan(start, end) {
+  const s = bkkParts(start);
+  const e = bkkParts(end);
+  const out = [];
+  const cur = new Date(Date.UTC(s.y, s.mo - 1, s.d));
+  const last = new Date(Date.UTC(e.y, e.mo - 1, e.d));
+  // A booking that ends exactly at 00:00 shouldn't paint the following day.
+  if (last > cur && e.h === 0 && e.mi === 0) last.setUTCDate(last.getUTCDate() - 1);
+  let guard = 0;
+  while (cur <= last && guard < 400) {
+    out.push(keyOf(cur.getUTCFullYear(), cur.getUTCMonth() + 1, cur.getUTCDate()));
+    cur.setUTCDate(cur.getUTCDate() + 1);
+    guard += 1;
+  }
+  return out;
+}
+
 export default function WeekSchedule() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -101,11 +122,20 @@ export default function WeekSchedule() {
     const map = {};
     for (const ev of events) {
       const s = bkkParts(ev.start); const e = bkkParts(ev.end);
-      const dayKey = keyOf(s.y, s.mo, s.d);
-      const startH = Math.max(GRID_START, s.h + s.mi / 60);
-      let endH = e.h + e.mi / 60; if (endH <= startH) endH = startH + 0.5;
-      endH = Math.min(GRID_END, Math.max(endH, startH + 0.5));
-      (map[dayKey] = map[dayKey] || []).push({ ...ev, startH, endH });
+      const startKey = keyOf(s.y, s.mo, s.d);
+      const endKey = keyOf(e.y, e.mo, e.d);
+      const spanKeys = daySpan(ev.start, ev.end);
+      for (const dayKey of spanKeys) {
+        const isStart = dayKey === startKey;
+        const isEnd = dayKey === endKey;
+        // On the first day use the real start time; on later days it carries
+        // over from the top of the grid. On the last day use the real end time;
+        // on earlier days it runs to the bottom of the grid.
+        const startH = isStart ? Math.max(GRID_START, s.h + s.mi / 60) : GRID_START;
+        let endH = isEnd ? e.h + e.mi / 60 : GRID_END;
+        endH = Math.min(GRID_END, Math.max(endH, startH + 0.5));
+        (map[dayKey] = map[dayKey] || []).push({ ...ev, id: `${ev.id}_${dayKey}`, startH, endH, contFromPrev: !isStart, contToNext: !isEnd });
+      }
     }
     for (const k of Object.keys(map)) {
       const arr = map[k].sort((a, b) => a.startH - b.startH);
@@ -134,9 +164,10 @@ export default function WeekSchedule() {
   const eventsByDayKey = useMemo(() => {
     const map = {};
     for (const ev of events) {
-      const s = bkkParts(ev.start);
-      const k = keyOf(s.y, s.mo, s.d);
-      (map[k] = map[k] || []).push(ev);
+      // Show a multi-day booking on every day it spans, not just its start day.
+      for (const k of daySpan(ev.start, ev.end)) {
+        (map[k] = map[k] || []).push(ev);
+      }
     }
     for (const k of Object.keys(map)) map[k].sort((a, b) => a.start - b.start);
     return map;
