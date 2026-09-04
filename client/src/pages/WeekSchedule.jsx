@@ -53,7 +53,7 @@ export default function WeekSchedule() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [anchor, setAnchor] = useState(() => new Date());
-  const [view, setView] = useState('week');
+  const [view, setView] = useState('month');
   const [filters, setFilters] = useState({ VEHICLE: true, MEETING_ROOM: true, BLOCK: true });
 
   // Build the visible week (Mon..Sun) from anchor, in Bangkok time
