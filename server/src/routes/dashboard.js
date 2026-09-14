@@ -30,6 +30,7 @@ router.get('/', requireAuth, async (req, res, next) => {
       currentBookings,
       upcoming,
       todaysVehBookings,
+      activeBlocks,
     ] = await Promise.all([
       prisma.booking.count({
         where: { status: { in: ['CONFIRMED', 'ACTIVE', 'COMPLETED'] }, startDatetime: { gte: todayStart, lte: todayEnd } },
@@ -64,6 +65,12 @@ router.get('/', requireAuth, async (req, res, next) => {
         include: { requester: true },
         orderBy: { startDatetime: 'asc' },
       }),
+      // Active resource blocks covering "now" (e.g. a vehicle in for service),
+      // so the dashboard can flag those vehicles instead of showing them as free
+      // or (when a leftover booking overlaps) as "in use".
+      prisma.resourceBlock.findMany({
+        where: { status: 'ACTIVE', startDatetime: { lte: now }, endDatetime: { gt: now } },
+      }),
     ]);
 
     // Per-vehicle live status for today (in use now / available / next booking).
@@ -72,16 +79,20 @@ router.get('/', requireAuth, async (req, res, next) => {
       const cur = dayBk.find((b) => new Date(b.startDatetime) <= now && new Date(b.endDatetime) > now) || null;
       const nxt = dayBk.find((b) => new Date(b.startDatetime) > now) || null;
       const isDisabled = !v.active || v.status === 'DISABLED';
+      const blk = activeBlocks.find((b) => b.resourceId === v.id) || null;
       return {
         id: v.id,
         name: v.resourceName,
         disabled: isDisabled,
+        block: blk ? { type: blk.blockType, reason: blk.reason || null, start: blk.startDatetime, end: blk.endDatetime } : null,
         current: cur ? { start: cur.startDatetime, end: cur.endDatetime, requester: cur.requesterName || cur.requester?.fullName || null } : null,
         next: nxt ? { start: nxt.startDatetime, end: nxt.endDatetime, requester: nxt.requesterName || nxt.requester?.fullName || null } : null,
       };
     });
-    const inUseVehicles = vehicleStatus.filter((s) => s.current).length;
-    const freeVehicles = vehicleStatus.filter((s) => !s.disabled && !s.current).length;
+    // A vehicle that is in for service (active block) or disabled counts as
+    // neither free nor in-use.
+    const inUseVehicles = vehicleStatus.filter((s) => s.current && !s.disabled && !s.block).length;
+    const freeVehicles = vehicleStatus.filter((s) => !s.disabled && !s.block && !s.current).length;
 
     const disabledVehicles = vehicles.filter((v) => !v.active || v.status === 'DISABLED').length;
 

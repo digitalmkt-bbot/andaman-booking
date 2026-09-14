@@ -127,20 +127,38 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {d.vehicleStatus.map((v) => {
-              const inUse = !!v.current;
-              const badge = v.disabled
+              // A vehicle in for service (active block) takes priority: it is not
+              // "in use" even if a leftover booking overlaps. Then resource-disabled,
+              // then a live booking, otherwise free.
+              const blocked = !!v.block;
+              const inUse = !blocked && !v.disabled && !!v.current;
+              const badge = blocked
+                ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
+                : v.disabled
                 ? 'bg-slate-200 text-slate-600 dark:bg-zinc-700 dark:text-zinc-300'
                 : inUse
                 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                 : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300';
-              const label = v.disabled ? t('dashboard.disabled') : inUse ? t('dashboard.inUse') : t('booking.available');
+              const label = blocked
+                ? t(`blockType.${v.block.type}`)
+                : v.disabled
+                ? t('dashboard.disabled')
+                : inUse
+                ? t('dashboard.inUse')
+                : t('booking.available');
               return (
                 <div key={v.id} className="p-4 rounded-3xl border border-slate-200/70 dark:border-zinc-800 bg-slate-50/70 dark:bg-ink-800">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-extrabold text-slate-900 dark:text-white truncate">{v.name}</span>
                     <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${badge}`}>{label}</span>
                   </div>
-                  {inUse ? (
+                  {blocked ? (
+                    <p className="text-xs font-medium text-rose-600/90 dark:text-rose-300/90 mt-1.5">
+                      {v.block.reason ? `${v.block.reason} · ` : ''}{t('common.to')} {fmtDate(v.block.end, lang)}
+                    </p>
+                  ) : v.disabled ? (
+                    <p className="text-xs text-slate-400 mt-1.5">{t('dashboard.freeAllDay')}</p>
+                  ) : inUse ? (
                     <p className="text-xs font-medium text-slate-600 dark:text-zinc-300 mt-1.5">
                       {fmtTime(v.current.start, lang)}–{fmtTime(v.current.end, lang)}
                       {v.current.requester ? ` · ${v.current.requester.split(' / ')[0]}` : ''}
